@@ -4,6 +4,9 @@ var app = {
     nroClases : 0,
     unidad : 1,
     totalvalores : 0,
+    histograma : [],
+    arrayLimites : [],
+    frecuenciaPastel : [],
     initialize: function() {
         this.bindEvents();
     },
@@ -53,7 +56,11 @@ var app = {
      //Marca
      marca = ((minimo+(minimo+app.amplitud - app.unidad))/(2));
      $("#marca").html("<strong>Marca</strong> = "+marca);
+     app.arrayLimites.push(marca);
      //Marca
+
+     app.misclientes = new Array(); 
+     app.frecuenciaData = new Array(); 
 
      //Calculo de tabla
      for (var a = 0; a <app.nroClases; a++) {
@@ -86,6 +93,9 @@ var app = {
                   "<td class='ui-table-priority-6'>"+frecuencia_acum+" - "+ app.totalvalores+"</td>"+
                   "<td class='ui-table-priority-7'>"+frecuencia_relativa_acum+" - "+(frecuencia_relativa_acum*100)+"%</td>"+
                 "</tr>");
+            
+             app.frecuenciaPastel.push((frecuencia_relativa*100));
+             app.histograma.push(frecuencia);   
              frecuencia=0;
          }
          else{
@@ -96,6 +106,8 @@ var app = {
            marca = marca + app.amplitud;
            limite_inferior = limite_inferior + app.amplitud;
            limite_superior = limite_superior + app.amplitud;
+
+           app.arrayLimites.push(marca);
 
            //FRECUENCIA
            for (var i = 0; i < valores.length; i++) {
@@ -124,16 +136,142 @@ var app = {
             valor_anterior = frecuencia;
             frecuencia_acum_down = frecuencia_acum_down - valor_anterior;
 
+            app.frecuenciaPastel.push((frecuencia_relativa*100));
+            app.histograma.push(frecuencia);   
+
             frecuencia=0;
          }
      }
      //Calculo de tabla       
+   $('#histograma').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Histograma'
+        },
+        subtitle: {
+            text: ''
+        },
+        xAxis: {
+            type: 'Fronteras'
+        },
+        yAxis: {
+            title: {
+                text: 'Frecuencia'
+            }
+        },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+        column: {
+            pointPadding: 0,
+            borderWidth: 0,
+            groupPadding: 0,
+            shadow: false
+        }
+        },
+
+        tooltip: {
+            headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+            pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}%</b> of total<br/>'
+        },
+
+        series: [{
+            name: 'Fronteras',
+            colorByPoint: true,
+            data: app.histograma
+        }],
+     });
+
+   $('#graficaLineas').highcharts({
+            title: {
+                text: 'Gráfica poligonal',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Estadistica y probabilidad 2015',
+                x: -20
+            },
+            xAxis: {
+                categories: app.arrayLimites
+            },
+            yAxis: {
+                title: {
+                    text: 'Frecuencia'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                valueSuffix: ''
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle',
+                borderWidth: 0
+            },
+            series: [{
+                name: 'X',
+                data: app.histograma
+            }]
+    });
+
+   $('#graficaTorta').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'Gráfica de torta'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Brands',
+                colorByPoint: true,
+                data: [{
+                    name: 'Clase 1',
+                    y: app.frecuenciaPastel[0],
+                }, {
+                    name: 'Clase 2',
+                    y: app.frecuenciaPastel[1],
+                }, {
+                    name: 'Clase 3',
+                    y: app.frecuenciaPastel[2],
+                }, {
+                    name: 'Clase 4',
+                    y: app.frecuenciaPastel[3],
+                }, {
+                    name: 'Clase 5',
+                    y: app.frecuenciaPastel[4],
+                }]
+            }]
+    });
     },
 
     onDeviceReady: function() {
-       //alert("OK");
        app.nroClases = $("#nroClases").val(); 
        app.NumeroDatos();
+
        $("#btnCalculaTabla").on('click',function(evt){app.calcularTabla();});   
 
     $('#graficaLineas').highcharts({
@@ -200,7 +338,6 @@ var app = {
             title: {
                 text: 'Total percent market share'
             }
-
         },
         legend: {
             enabled: false
